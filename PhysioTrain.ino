@@ -1,4 +1,8 @@
-
+/*******************************************************************************
+ * PhysioTrain (c) 2017
+ * Andreas Bachmann
+ * 07.04.2017
+ */
 
 #include "config.h"
 
@@ -28,7 +32,7 @@ void loop() {
     cli.update();
     if (imu->update()) {
         u++;
-        //if (u % 10 == 0) {
+        if (u % 20 == 0) {
             Acceleration a = imu->getAcceleration();
             //EulerAngle e = imu->getEulerAngle();
             Quaternion q = imu->getQuaternion();
@@ -51,6 +55,6 @@ void loop() {
             str += String(q.getZ(), 4) + "\r\n";
             
             Serial.print(str);
-        //}
+        }
     }
 }
