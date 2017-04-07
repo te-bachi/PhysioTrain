@@ -3,12 +3,6 @@
 #include "config.h"
 
 #include "PhysioTrainLib.h"
-/*
-#include "EulerAngle.h"
-#include "IMU.h"
-#include "CLI.h"
-#include "Quaternion.h"
-*/
 
 CLI  cli;
 IMU* imu;
@@ -33,40 +27,30 @@ void loop() {
     //Serial.println("loop");
     cli.update();
     if (imu->update()) {
-        if (!isCalib) {
-            if (millis() > 2000) {
-                angle[i] = EulerAngle(imu->getRoll(), imu->getPitch(), imu->getYaw());
-                i++;
-                if (i >= calibSize) {
-                    float roll  = 0.0f;
-                    float pitch = 0.0f;
-                    float yaw   = 0.0f;
-                    for (int k = 0; k < calibSize; k++) {
-                        roll  += angle[k].getRoll();
-                        pitch += angle[k].getPitch();
-                        yaw   += angle[k].getYaw();
-                    }
-                    roll /= calibSize;
-                    pitch /= calibSize;
-                    yaw /= calibSize;
-                    calib = EulerAngle(roll, pitch, yaw);
-                    isCalib = true;
-                }
-            }
-        } else {
-            u++;
-            if (u % 100 == 0) {
-                Acceleration a = imu->getQuaternion();
-                Quaternion q = imu->getQuaternion();
-                //String a_e = "e: " + String(imu->getRoll(), 4) + ", " + String(imu->getPitch(), 4) + ", " + String(imu->getYaw(), 4) + "\r\n";
-                String a_q = "q: " + String(q._w, 4) + " + " + String(q._x, 4) + " + " + String(q._y, 4) + " + " + String(q._z, 4) + "\r\n";
-                //String b = "ref: " + String(calib.getRoll()) + " " + String(calib.getPitch()) + ", " + String(calib.getYaw()) + "\r\n";
-                //String c = "rel: " + String(calib.getRoll() - imu->getRoll()) + " " + String(calib.getPitch() - imu->getPitch()) + ", " + String(calib.getYaw() - imu->getYaw()) + "\r\n";
-                Serial.print(a_e);
-                Serial.print(a_q);
-                //Serial.print(b);
-                //Serial.print(c);
-            }
-        }
+        u++;
+        //if (u % 10 == 0) {
+            Acceleration a = imu->getAcceleration();
+            //EulerAngle e = imu->getEulerAngle();
+            Quaternion q = imu->getQuaternion();
+            
+            String str = "";
+            
+            str += String(a.getX(), 4) + ", ";
+            str += String(a.getY(), 4) + ", ";
+            str += String(a.getZ(), 4) + ", ";
+
+            /*
+            str += String(e.getRoll(),  4) + ", ";
+            str += String(e.getPitch(), 4) + ", ";
+            str += String(e.getYaw(),   4) + ", ";
+            */
+            
+            str += String(q.getW(), 4) + ", ";
+            str += String(q.getX(), 4) + ", ";
+            str += String(q.getY(), 4) + ", ";
+            str += String(q.getZ(), 4) + "\r\n";
+            
+            Serial.print(str);
+        //}
     }
 }
