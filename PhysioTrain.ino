@@ -51,5 +51,6 @@ void loop() {
       line  += String(" ]");
       SerialUSB.println(line);
     }
+    u++;
 }
 
