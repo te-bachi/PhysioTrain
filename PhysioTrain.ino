@@ -13,6 +13,12 @@ int v = 0;
 Quaternion q1;
 Quaternion q2;
 
+bool recordValue;
+bool startStopValue;
+
+//Output
+#define LadeBalkenLow_Pin         14
+#define LadeBalkenHIGH_Pin        15  //LED Rechts
 
 void setup() {
     PhysioTrain::begin();
@@ -31,11 +37,17 @@ void loop() {
         q2 = imuUpper.getQuaternion();
     }
 
-    //String line = q1;
+    recordValue    = recordSwitch.getValue();
+    startStopValue = startStopButton.getValue();
+
     if (u % 20 == 0) {
       String line;
-      
+
       line   = String("[ ");
+      line  += String(millis());
+      line  += String(" ] ");
+      
+      line  += String("[ ");
       line  += String(q1.getW(), 4) + ", ";
       line  += String(q1.getX(), 4) + ", ";
       line  += String(q1.getY(), 4) + ", ";
@@ -48,8 +60,15 @@ void loop() {
       line  += String(q2.getX(), 4) + ", ";
       line  += String(q2.getY(), 4) + ", ";
       line  += String(q2.getZ(), 4);
-      line  += String(" ]");
+      line  += String(" ] ");
+
+      line  += String(" record=");
+      line  += String(recordValue);
+      line  += String(" start=");
+      line  += String(startStopValue);
+      
       SerialUSB.println(line);
+      
     }
     u++;
 }
