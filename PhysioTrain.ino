@@ -10,14 +10,6 @@ int i = 0;
 int u = 0;
 int v = 0;
 
-Quaternion q1;
-Quaternion q2;
-
-Mode mode;
-bool recordValue;
-bool startStopValue;
-bool startStopSaved = false;
-
 //Output
 #define LadeBalkenLow_Pin         14
 #define LadeBalkenHIGH_Pin        15  //LED Rechts
@@ -41,8 +33,13 @@ void loop() {
     
     I2CMux::selectGpioExpander();
     mode           = modeSwitch.getValue();
-    recordValue    = recordSwitch.getValue();
+    recordValue    = recordSwitch.getToggleValue();
     startStopValue = startStopButton.getValue();
+
+    if (recordSwitch.getPosition()) {
+        vibra.start(2000);
+    }
+    vibra.tryStop();
 
 
     if (startStopValue == HIGH && startStopValue != startStopSaved) {
@@ -54,73 +51,10 @@ void loop() {
         startStopSaved = startStopValue;
     }
     
-    if (startStopValue == HIGH) {
-
-        if (u % 20 == 0) {
-
-            I2CMux::selectRtc();
-            DateTime now = rtc.now();
-            
-            String line;
-      
-            model.update();
-            Position pUpper = model.getUpperArmPosition();
-            Position pLower = model.getLowerArmPosition();
-      
-            line   = String("[ ");
-            //line  += String(millis());
-            
-            line  += String(now.year());
-            line  += "/";
-            line  += String(now.month());
-            line  += ('/');
-            line  += String(now.day());
-            line  += (" ");
-            line  += String(now.hour());
-            line  += (':');
-            line  += String(now.minute());
-            line  += (':');
-            line  += String(now.second());
-            line  += String(" ] ");
-            
-            line  += String("[ ");
-            line  += String(q1.getW(), 4) + ", ";
-            line  += String(q1.getX(), 4) + ", ";
-            line  += String(q1.getY(), 4) + ", ";
-            line  += String(q1.getZ(), 4);
-            line  += String(" ] ");
-            
-            line  += String("[ ");
-            line  += String(pUpper.getX(), 4) + ", ";
-            line  += String(pUpper.getY(), 4) + ", ";
-            line  += String(pUpper.getZ(), 4);
-            line  += String(" ] ");
-            
-            line  += String("[ ");
-            line  += String(q2.getW(), 4) + ", ";
-            line  += String(q2.getX(), 4) + ", ";
-            line  += String(q2.getY(), 4) + ", ";
-            line  += String(q2.getZ(), 4);
-            line  += String(" ] ");
-            
-            line  += String("[ ");
-            line  += String(pLower.getX(), 4) + ", ";
-            line  += String(pLower.getY(), 4) + ", ";
-            line  += String(pLower.getZ(), 4);
-            line  += String(" ] ");
-            
-            line  += String(" mode=");
-            line  += String(mode.toString());
-            
-            line  += String(" record=");
-            line  += String(recordValue);
-            line  += String(" start=");
-            line  += String(startStopValue);
-            
-            SerialUSB.println(line);
-            
-        }
-        u++;
+    stateMachine.run(mode, startStopValue);
+    if (stateMachine.getState() != state) {
+        state = stateMachine.getState();
+        SerialUSB.println(stateMachine.toString());
     }
 }
 
