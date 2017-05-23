@@ -10,25 +10,30 @@ int i = 0;
 int u = 0;
 int v = 0;
 
-//Output
-#define LadeBalkenLow_Pin         14
-#define LadeBalkenHIGH_Pin        15  //LED Rechts
-
 void setup() {
     PhysioTrain::begin();
     SerialUSB.println("Done!");
 }
 
 void loop() {
+    bool imuLowerUpdate = false;
+    bool imuUpperUpdate = false;
     
     //SerialUSB.println("loop");
     cli.update();
-    if (imuLower.update()) {
+    
+    imuLowerUpdate = imuLower.update();
+    if (imuLowerUpdate) {
         q1 = imuLower.getQuaternion();
     }
 
-    if (imuUpper.update()) {
+    imuUpperUpdate = imuUpper.update();
+    if (imuUpperUpdate) {
         q2 = imuUpper.getQuaternion();
+    }
+    
+    if (imuLowerUpdate || imuUpperUpdate) {
+        model.update();
     }
     
     I2CMux::selectGpioExpander();
@@ -36,11 +41,10 @@ void loop() {
     recordValue    = recordSwitch.getToggleValue();
     startStopValue = startStopButton.getValue();
 
-    if (recordSwitch.getPosition()) {
-        vibra.start(2000);
-    }
+    //if (recordSwitch.getPosition()) {
+    //    vibra.start(2000);
+    //}
     vibra.tryStop();
-
 
     if (startStopValue == HIGH && startStopValue != startStopSaved) {
         startStopSaved = startStopValue;
@@ -54,7 +58,21 @@ void loop() {
     stateMachine.run(mode, startStopValue);
     if (stateMachine.getState() != state) {
         state = stateMachine.getState();
-        SerialUSB.println(stateMachine.toString());
+        SerialUSB.print(stateMachine.toString());
+        if (stateMachine.getState() == StateMachine::State::ERROR) {
+                SerialUSB.print(" mode=");
+                SerialUSB.print(mode.toString());
+                SerialUSB.print(" record=");
+                SerialUSB.print(recordValue);
+                SerialUSB.print(" start=");
+                SerialUSB.print(startStopValue);
+        }
+        SerialUSB.println("");
     }
-}
 
+    if (v % 120 == 0) {
+        accu.checkLevel();
+    }
+    v++;
+}
+ 
